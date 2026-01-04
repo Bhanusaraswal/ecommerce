@@ -961,3 +961,8 @@ If interviewer asks:
 
 🔵 The $project stage then returns only the required fields, which optimizes the response size and performance.
 
+
+
+
+
+

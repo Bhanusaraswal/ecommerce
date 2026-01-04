@@ -93,8 +93,21 @@ export const updateQuantity=async(req,res)=>{
 
 
 //get all product
-export const getAllProduct=async(req,res)=>{
-	const {productId}=req.body
-	const user=req.user;
-	
-}
+export const getCartProducts = async (req, res) => {
+	try {
+		//this gives an array of diffrent produxt
+		const products = await Product.find({ _id: { $in: req.user.cartItems } });
+
+		// add quantity for each product
+		//map create a new array where it store the return thingd without modify the origina array
+		const cartItems = products.map((product) => {
+			const item = req.user.cartItems.find((cartItem) => cartItem.id === product.id);
+			return { ...product.toJSON(), quantity: item.quantity };
+		});
+
+		res.json(cartItems);
+	} catch (error) {
+		console.log("Error in getCartProducts controller", error.message);
+		res.status(500).json({ message: "Server error", error: error.message });
+	}
+};
