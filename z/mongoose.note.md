@@ -5,20 +5,11 @@
 # Mongoose is an ODM (Object Data Modeling) library for MongoDB in Node.js.
 
 👉 It helps you:
-
 Define schema (structure of data)
 
 Validate data
 
 Create models to interact with MongoDB collections
-
-
-Perfect 👍
-Below are **INTERVIEW-READY, DETAILED answers** with **simple language + examples** so you can explain confidently.
-
-I’ll also tell you **how to speak each answer to the interviewer** (this matters a lot).
-
----
 
 # 🔹 BASIC QUESTIONS
 
