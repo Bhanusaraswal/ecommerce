@@ -20,9 +20,14 @@ const CreateProductForm = () => {
 		e.preventDefault();
 		try {
 			await createProduct(newProduct);
+			// Reset form after successful creation
 			setNewProduct({ name: "", description: "", price: "", category: "", image: "" });
-		} catch {
-			console.log("error creating a product");
+			// Reset file input
+			const fileInput = document.getElementById('image');
+			if (fileInput) fileInput.value = '';
+		} catch (error) {
+			// Error is already handled in the store with toast notification
+			console.log("error creating a product:", error);
 		}
 	};
 

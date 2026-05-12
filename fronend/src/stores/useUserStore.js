@@ -17,10 +17,11 @@ export const useUserStore = create((set, get) => ({
 
 		try {
 			const res = await axios.post("/auth/signup", { name, email, password });
-			set({ user: res.data, loading: false });
+			set({ user: res.data.user || res.data, loading: false });
+			toast.success("Signup successful!");
 		} catch (error) {
 			set({ loading: false });
-			toast.error(error.response.data.message || "An error occurred");
+			toast.error(error.response?.data?.message || error.message || "An error occurred");
 		}
 	},
 	login: async (email, password) => {
@@ -30,9 +31,10 @@ export const useUserStore = create((set, get) => ({
 			const res = await axios.post("/auth/login", { email, password });
 
 			set({ user: res.data, loading: false });
+			toast.success("Login successful!");
 		} catch (error) {
 			set({ loading: false });
-			toast.error(error.response.data.message || "An error occurred");
+			toast.error(error.response?.data?.message || error.message || "An error occurred");
 		}
 	},
 
@@ -51,7 +53,8 @@ export const useUserStore = create((set, get) => ({
 			const response = await axios.get("/auth/profile");
 			set({ user: response.data, checkingAuth: false });
 		} catch (error) {
-			console.log(error.message);
+			// Profile endpoint might not exist yet, that's okay
+			console.log("Auth check failed:", error.response?.status || error.message);
 			set({ checkingAuth: false, user: null });
 		}
 	},
@@ -74,35 +77,35 @@ export const useUserStore = create((set, get) => ({
 
 // TODO: Implement the axios interceptors for refreshing access token
 
-// Axios interceptor for token refresh
-let refreshPromise = null;
+// // Axios interceptor for token refresh
+// let refreshPromise = null;
 
-axios.interceptors.response.use(
-	(response) => response,
-	async (error) => {
-		const originalRequest = error.config;
-		if (error.response?.status === 401 && !originalRequest._retry) {
-			originalRequest._retry = true;
+// axios.interceptors.response.use(
+// 	(response) => response,
+// 	async (error) => {
+// 		const originalRequest = error.config;
+// 		if (error.response?.status === 401 && !originalRequest._retry) {
+// 			originalRequest._retry = true;
 
-			try {
-				// If a refresh is already in progress, wait for it to complete
-				if (refreshPromise) {
-					await refreshPromise;
-					return axios(originalRequest);
-				}
+// 			try {
+// 				// If a refresh is already in progress, wait for it to complete
+// 				if (refreshPromise) {
+// 					await refreshPromise;
+// 					return axios(originalRequest);
+// 				}
 
-				// Start a new refresh process
-				refreshPromise = useUserStore.getState().refreshToken();
-				await refreshPromise;
-				refreshPromise = null;
+// 				// Start a new refresh process
+// 				refreshPromise = useUserStore.getState().refreshToken();
+// 				await refreshPromise;
+// 				refreshPromise = null;
 
-				return axios(originalRequest);
-			} catch (refreshError) {
-				// If refresh fails, redirect to login or handle as needed
-				useUserStore.getState().logout();
-				return Promise.reject(refreshError);
-			}
-		}
-		return Promise.reject(error);
-	}
-);
+// 				return axios(originalRequest);
+// 			} catch (refreshError) {
+// 				// If refresh fails, redirect to login or handle as needed
+// 				useUserStore.getState().logout();
+// 				return Promise.reject(refreshError);
+// 			}
+// 		}
+// 		return Promise.reject(error);
+// 	}
+// );

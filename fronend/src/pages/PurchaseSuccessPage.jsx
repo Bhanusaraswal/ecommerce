@@ -11,26 +11,12 @@ const PurchaseSuccessPage = () => {
 	const [error, setError] = useState(null);
 
 	useEffect(() => {
-		const handleCheckoutSuccess = async (sessionId) => {
-			try {
-				await axios.post("/payments/checkout-success", {
-					sessionId,
-				});
-				clearCart();
-			} catch (error) {
-				console.log(error);
-			} finally {
-				setIsProcessing(false);
-			}
-		};
-
-		const sessionId = new URLSearchParams(window.location.search).get("session_id");
-		if (sessionId) {
-			handleCheckoutSuccess(sessionId);
-		} else {
+		// For Razorpay, payment is already verified in OrderSummary
+		// Just clear the cart and show success
+		setTimeout(() => {
+			clearCart();
 			setIsProcessing(false);
-			setError("No session ID found in the URL");
-		}
+		}, 1000);
 	}, [clearCart]);
 
 	if (isProcessing) return "Processing...";

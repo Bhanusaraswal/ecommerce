@@ -1,36 +1,104 @@
 import { motion } from "framer-motion";
 import { useCartStore } from "../stores/useCartStore";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { MoveRight } from "lucide-react";
-import { loadStripe } from "@stripe/stripe-js";
 import axios from "../lib/axios";
-
-const stripePromise = loadStripe(
-	"pk_test_51KZYccCoOZF2UhtOwdXQl3vcizup20zqKqT9hVUIsVzsdBrhqbUI2fE0ZdEVLdZfeHjeyFXtqaNsyCJCmZWnjNZa00PzMAjlcL"
-);
+import { toast } from "react-hot-toast";
 
 const OrderSummary = () => {
 	const { total, subtotal, coupon, isCouponApplied, cart } = useCartStore();
+	const navigate = useNavigate();
 
 	const savings = subtotal - total;
 	const formattedSubtotal = subtotal.toFixed(2);
 	const formattedTotal = total.toFixed(2);
 	const formattedSavings = savings.toFixed(2);
 
+	const loadScript = (src) => {
+		return new Promise((resolve) => {
+			const script = document.createElement("script");
+			script.src = src;
+			script.onload = () => resolve(true);
+			script.onerror = () => resolve(false);
+			document.body.appendChild(script);
+		});
+	};
+
 	const handlePayment = async () => {
-		const stripe = await stripePromise;
-		const res = await axios.post("/payments/create-checkout-session", {
-			products: cart,
-			couponCode: coupon ? coupon.code : null,
-		});
+		try {
+			// Load Razorpay script
+			const isLoaded = await loadScript("https://checkout.razorpay.com/v1/checkout.js");
+			if (!isLoaded) {
+				toast.error("Failed to load Razorpay. Please try again.");
+				return;
+			}
 
-		const session = res.data;
-		const result = await stripe.redirectToCheckout({
-			sessionId: session.id,
-		});
+			// Create Razorpay order
+			const res = await axios.post("/payment/create-order", {
+				products: cart,
+				couponCode: coupon ? coupon.code : null,
+			});
 
-		if (result.error) {
-			console.error("Error:", result.error);
+			const { orderId, amount, key } = res.data;
+
+			if (key === "mock_key") {
+				// Mock payment success
+				await axios.post("/payment/verify-payment", {
+					razorpay_order_id: orderId,
+					razorpay_payment_id: "mock_payment_" + Date.now(),
+					razorpay_signature: "mock_signature",
+					products: cart,
+					couponCode: coupon ? coupon.code : null,
+				});
+				toast.success("Payment successful (Mock)!");
+				navigate("/purchase-success");
+				return;
+			}
+
+			// Initialize Razorpay checkout
+			const options = {
+				key: key,
+				amount: amount,
+				currency: "INR",
+				name: "Your Store",
+				description: "Order Payment",
+				order_id: orderId,
+				handler: async function (response) {
+					try {
+						// Verify payment on backend
+						await axios.post("/payment/verify-payment", {
+							razorpay_order_id: response.razorpay_order_id,
+							razorpay_payment_id: response.razorpay_payment_id,
+							razorpay_signature: response.razorpay_signature,
+							products: cart,
+							couponCode: coupon ? coupon.code : null,
+						});
+						
+						toast.success("Payment successful!");
+						navigate("/purchase-success");
+					} catch (error) {
+						toast.error(error.response?.data?.error || "Payment verification failed");
+					}
+				},
+				prefill: {
+					name: "Customer",
+					email: "customer@example.com",
+				},
+				theme: {
+					color: "#10b981", // emerald color
+				},
+				modal: {
+					ondismiss: function () {
+						toast.error("Payment cancelled");
+					},
+				},
+			};
+
+			const razorpay = new window.Razorpay(options);
+			razorpay.open();
+		} catch (error) {
+			toast.error(error.response?.data?.error || "Failed to initialize payment");
+			console.error("Payment error:", error);
 		}
 	};
 
