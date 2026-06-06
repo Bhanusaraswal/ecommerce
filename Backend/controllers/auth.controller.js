@@ -31,18 +31,18 @@ const storeRefreshToken = async (userId, refreshToken) => {
 };
 
 const setCookies = (res, accessToken, refreshToken) => {
-    res.cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 15 * 60 * 1000, // 15 minutes
-    });
-    res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+	res.cookie("accessToken", accessToken, {
+		httpOnly: true, 
+		secure: true, // MUST be true for HTTPS cloud hosting
+		sameSite: "none", // MUST be "none" to allow cross-domain cookie transfers
+		maxAge: 15 * 60 * 1000, 
+	});
+	res.cookie("refreshToken", refreshToken, {
+		httpOnly: true, 
+		secure: true, // MUST be true for HTTPS cloud hosting
+		sameSite: "none", // MUST be "none" to allow cross-domain cookie transfers
+		maxAge: 7 * 24 * 60 * 60 * 1000, 
+	});
 };
 
 // ─── SIGNUP ───────────────────────────────────────────────────────────────────
