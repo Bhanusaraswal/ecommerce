@@ -52,7 +52,7 @@ function Homepage() {
         <div className='relative z-10 container mx-auto px-4 h-full flex items-center'>
           <div className='max-w-2xl'>
             <div className='flex items-center gap-2 mb-4'>
-              <Sparkles className='w-8 h-8 text-emerald-400' />
+             
               <span className='text-emerald-400 font-semibold'>Welcome to Our Store</span>
             </div>
             <h1 className='text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-6 leading-tight'>
